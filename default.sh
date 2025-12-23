@@ -49,13 +49,13 @@ sway_apps=(
 )
 
 gnome_apps=(
-	totem
-	eog
-	gnome-disk-utility
-	gnome-text-editor
-	gnome-calculator
-	evince
-	nautilus
+	totem --no-install-recommends
+	eog --no-install-recommends
+	gnome-disk-utility --no-install-recommends
+	gnome-text-editor --no-install-recommends
+	gnome-calculator --no-install-recommends
+	evince --no-install-recommends
+	nautilus --no-install-recommends
 )
 
 utils_apps=(
@@ -458,13 +458,13 @@ paquetes=(
 		printf "║                                                  ║\n"
 
 		# Establecer tema oscuro gnome apps
-		gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
+		sudo -u $USER DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
 		draw_spinner $! "Estableciendo tema oscuro"
 
 		xdg-user-dirs-update > /dev/null 2>&1 &
-		draw_spinner $! "Estableciendo carpetas de usuario"
+		sudo -u $USER DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS draw_spinner $! "Estableciendo carpetas de usuario"
 
-		gsettings set org.gnome.desktop.privacy remember-recent-files false > /dev/null 2>&1 &
+		sudo -u $USER DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS gsettings set org.gnome.desktop.privacy remember-recent-files false > /dev/null 2>&1 &
 		draw_spinner $! "Desactivando historialde archivos"
 
 		# Cambiar tema GTK para GTK3
