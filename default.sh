@@ -273,7 +273,7 @@ paquetes=(
 	}
 
 	sys_setNetwork(){
-		rm /etc/network/interfaces > /dev/null 2>&1 &
+		rm -f /etc/network/interfaces > /dev/null 2>&1 &
 		draw_spinner $! "Eliminando configuracion WIFI"
 	}
 
@@ -319,8 +319,10 @@ paquetes=(
 		sudo rm -rf dotfiles/.git > /dev/null 2>&1 &
 		draw_spinner $! "Eliminando .git"
 
+		shopt -s dotglob
 		sudo -u "$SUDO_USER" cp -r dotfiles/* /home/"$SUDO_USER"/ > /dev/null 2>&1 &
 		draw_spinner $! "Instalando Dotfiles"
+		shopt -u dotglob
 
 		sudo rm -rf dotfiles > /dev/null 2>&1 &
 		draw_spinner $! "Limpiando"
@@ -407,7 +409,7 @@ paquetes=(
 
 		draw_space
 		
-		apt install -y code > /dev/null 2>&1 &
+		apt install -y codium > /dev/null 2>&1 &
 		draw_spinner $! "Instalando VSCodium"
 	}
 
@@ -415,20 +417,22 @@ paquetes=(
 		printf "║    Instalando fuentes                            ║\n"
 		printf "║                                                  ║\n"
 
+		FONT_PATH="/tmp/Hasklig.zip"
+
 		# Instalar dependencias
 		apt install -y fonts-noto-color-emoji zip unzip > /dev/null 2>&1 &
 		draw_spinner $! "Instalando zip y Emoji font"
 
 		# Descargar y descomprimir la fuente Nerd Font Hasklig
-		if [ -f "/home/"$SUDO_USER"/Desktop/Hasklig.zip" ]; then
+		if [ -f "$FONT_PATH" ]; then
 			sleep 1 &
 			draw_spinner $! "Fuentes ya descargadas!"
 		else
-			sudo -u "$SUDO_USER" wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/Hasklig.zip > /dev/null 2>&1 &
-				draw_spinner $! "Descargando Nerdfont Hasklig"
+			wget -O "$FONT_PATH" https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/Hasklig.zip > /dev/null 2>&1 &
+			draw_spinner $! "Descargando Nerdfont Hasklig"
 		fi
 		
-		sudo unzip Hasklig.zip -d /usr/local/share/fonts/Hasklig > /dev/null 2>&1 &
+		unzip -o "$FONT_PATH" -d /usr/local/share/fonts/Hasklig > /dev/null 2>&1 &
 		draw_spinner $! "Descomprimiendo Nerdfont Hasklug"
 		
 		fc-cache -fv > /dev/null 2>&1 &
@@ -503,7 +507,7 @@ paquetes=(
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
 		draw_spinner $! "Estableciendo tema oscuro"
 
-		sudo -u "$REAL_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' > /dev/null 2>&1 &
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' > /dev/null 2>&1 &
 		draw_spinner $! "Aplicando tema Adwaita-dark"
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" xdg-user-dirs-update > /dev/null 2>&1 &
@@ -518,7 +522,7 @@ paquetes=(
 ### Main menu
 
 	main(){
-		while [ true ]; do
+		while true; do
 			draw_header "Instalador de SWAY"
 			printf "║      Selecciona una opcion:                      ║\n"
 			printf "║                                                  ║\n"
@@ -591,7 +595,7 @@ sleep 0.2 &
 draw_spinner $! "Verificando permisos de sudo..."
 ver_sudo
 
-sudo rm -rf .git
+sudo rm -rf .git 2>/dev/null
 
 sleep 0.2 &
 draw_spinner $! "Verificando distribucion..."
@@ -600,6 +604,8 @@ ver_distro
 sleep 0.2 &
 draw_spinner $! "Creando carpetas de usuario..."
 sys_mkDir
+
+cd /home/"$SUDO_USER"/Desktop/
 
 sleep 1
 main
