@@ -36,6 +36,7 @@ sys_apps=(
 	lxpolkit
 	pkexec
 	network-manager
+	dbus-x11
 )
 
 sway_apps=(
@@ -49,13 +50,13 @@ sway_apps=(
 )
 
 gnome_apps=(
-	totem --no-install-recommends
-	eog --no-install-recommends
-	gnome-disk-utility --no-install-recommends
-	gnome-text-editor --no-install-recommends
-	gnome-calculator --no-install-recommends
-	evince --no-install-recommends
-	nautilus --no-install-recommends
+	totem
+	eog
+	gnome-disk-utility
+	gnome-text-editor
+	gnome-calculator
+	evince
+	nautilus
 )
 
 utils_apps=(
@@ -69,6 +70,16 @@ utils_apps=(
 	wl-clipboard
 	wf-recorder
 	ddcutil
+	pavucontrol
+)
+
+multimedia_apps=(
+    ffmpeg                   # Codecs y conversión de video
+    gstreamer1.0-plugins-base
+    gstreamer1.0-plugins-good
+    gstreamer1.0-plugins-bad
+    gstreamer1.0-plugins-ugly
+    gstreamer1.0-libav
 )
 
 paquetes=(
@@ -77,6 +88,7 @@ paquetes=(
 	"${sway_apps[@]}"
 	"${gnome_apps[@]}"
 	"${utils_apps[@]}"
+	"${multimedia_apps[@]}"
 )
 
 ### FUNCIONES ###
@@ -411,10 +423,6 @@ paquetes=(
 		fi
 		draw_space
 		draw_separator
-
-		# Actualizar repositorios
-		sys_update 0
-		draw_separator
 		
 		# Instalar sway
 		install_sway 0
@@ -443,7 +451,13 @@ paquetes=(
 		# Eliminar networkmanager
 		sys_setNetwork
 		draw_separator
+
+		# Actualizar repositorios
+		sys_update 0
+		draw_separator
 		
+		draw_separator
+
 		# Finalizar
 		sleep 2 &
 		draw_spinner $! "Instalacion finalizada"
@@ -458,20 +472,14 @@ paquetes=(
 		printf "║                                                  ║\n"
 
 		# Establecer tema oscuro gnome apps
-		sudo -u $USER DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
+		sudo -u "$REAL_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
 		draw_spinner $! "Estableciendo tema oscuro"
 
-		xdg-user-dirs-update > /dev/null 2>&1 &
-		sudo -u $USER DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS draw_spinner $! "Estableciendo carpetas de usuario"
+		sudo -u "$REAL_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" xdg-user-dirs-update > /dev/null 2>&1 &
+		draw_spinner $! "Actualizando directorios de usuario"
 
-		sudo -u $USER DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS gsettings set org.gnome.desktop.privacy remember-recent-files false > /dev/null 2>&1 &
-		draw_spinner $! "Desactivando historialde archivos"
-
-		# Cambiar tema GTK para GTK3
-		mkdir -p "$(dirname "$GTK3_CONF")"
-		gtk3_file
-		draw_spinner $! "Estableciendo tema GTK3"
-		chown "$REAL_USER:$REAL_USER" "$GTK3_CONF"
+		sudo -u "$REAL_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.privacy remember-recent-files false > /dev/null 2>&1 &
+		draw_spinner $! "Deshabilitando archivos recientes"
 	}
 
 ### FUNCIONES PENDIENTES ###
