@@ -9,12 +9,20 @@ TAB='$\t'
 TAB_SIZE='\t'
 DISTRO=""
 
-REAL_USER=$(logname)
-USER_ID=$(id -u "$REAL_USER")
-
+USER_ID=$(id -u "$SUDO_USER")
 DBUS_ADDR="unix:path=/run/user/$USER_ID/bus"
 
-GTK3_CONF="/home/$REAL_USER/.config/gtk-3.0/settings.ini"
+# Configuración de repositorio Mozilla
+MOZILLA_SOURCES='Types: deb
+URIs: https://packages.mozilla.org/apt
+Suites: mozilla
+Components: main
+Signed-By: /etc/apt/keyrings/packages.mozilla.org.asc'
+
+# Configuración de prioridad Mozilla
+MOZILLA_PREFERENCES='Package: *
+Pin: origin packages.mozilla.org
+Pin-Priority: 1000'
 
 deb_paquetes=(
 	brightnessctl
@@ -57,6 +65,7 @@ gnome_apps=(
 	gnome-calculator
 	evince
 	nautilus
+	baobab
 )
 
 utils_apps=(
@@ -64,6 +73,7 @@ utils_apps=(
 	unzip
 	curl
 	grim
+	git
 	slurp
 	dunst
 	libnotify-bin
@@ -289,7 +299,7 @@ paquetes=(
 
 		# Permisos DDCutil
 		modprobe i2c-dev
-		usermod -aG i2c $REAL_USER
+		usermod -aG i2c $SUDO_USER
 
 		# Aviso
 		if [ $1 -eq 1 ]; then
@@ -309,7 +319,7 @@ paquetes=(
 		sudo rm -rf dotfiles/.git > /dev/null 2>&1 &
 		draw_spinner $! "Eliminando .git"
 
-		sudo -u "$SUDO_USER" cp -r dotfiles/.* /home/"$SUDO_USER"/ > /dev/null 2>&1 &
+		sudo -u "$SUDO_USER" cp -r dotfiles/* /home/"$SUDO_USER"/ > /dev/null 2>&1 &
 		draw_spinner $! "Instalando Dotfiles"
 
 		sudo rm -rf dotfiles > /dev/null 2>&1 &
@@ -324,7 +334,7 @@ paquetes=(
 			printf "║                                                  ║\n"
 			printf "║     ╔═════════════════════════════════════╗      ║\n"
 			printf "║     ║ 1. Brave                            ║      ║\n"
-			printf "║     ║ 2. Firefox - ESR                    ║      ║\n"
+			printf "║     ║ 2. Firefox                          ║      ║\n"
 			printf "║     ╚═════════════════════════════════════╝      ║\n"
 			printf "║                                                  ║\n"
 			printf "║                                                  ║\n"
@@ -344,7 +354,27 @@ paquetes=(
 			curl -fsS https://dl.brave.com/install.sh | sh > /dev/null 2>&1 &
 			draw_spinner $! "Instalando Brave"
 		elif [ "$opcion" -eq 2 ]; then
-				apt install -y firefox-esr > /dev/null 2>&1 &
+			# Crear directorio para claves APT
+			install -d -m 0755 /etc/apt/keyrings > /dev/null 2>&1 &
+			draw_spinner $! "Creando directorio de claves"
+			
+			# Descargar clave de firma de Mozilla
+			wget -q https://packages.mozilla.org/apt/repo-signing-key.gpg -O- | tee /etc/apt/keyrings/packages.mozilla.org.asc > /dev/null 2>&1 &
+			draw_spinner $! "Descargando clave de Mozilla"
+			
+			# Agregar repositorio de Mozilla (Debian 13 Trixie)
+			echo "$MOZILLA_SOURCES" | tee /etc/apt/sources.list.d/mozilla.sources > /dev/null 2>&1 &
+			draw_spinner $! "Agregando repositorio de Mozilla"
+			
+			# Configurar prioridad de paquetes de Mozilla
+			echo "$MOZILLA_PREFERENCES" | tee /etc/apt/preferences.d/mozilla > /dev/null 2>&1 &
+			draw_spinner $! "Configurando prioridad de paquetes"
+			
+			# Actualizar e instalar Firefox
+			apt update > /dev/null 2>&1 &
+			draw_spinner $! "Actualizando repositorios"
+			
+			apt install -y firefox > /dev/null 2>&1 &
 			draw_spinner $! "Instalando Firefox"
 		else
 			sys_invalid
@@ -412,7 +442,7 @@ paquetes=(
 		printf "║                                                  ║\n"
 		printf "║    Solo realizar en instalaciones nuevas         ║\n"
 		printf "║    Pensado para instalaciones minimas            ║\n"
-		printf "║    (NETINSTALL)                                  ║\n"
+		printf "║    (DEBIAN NETINSTALL)                           ║\n"
 		printf "║                                                  ║\n"
 		draw_footer
 		printf "\033[F\033[F"
@@ -453,9 +483,7 @@ paquetes=(
 		draw_separator
 
 		# Actualizar repositorios
-		sys_update 0
-		draw_separator
-		
+		sys_update
 		draw_separator
 
 		# Finalizar
@@ -472,13 +500,16 @@ paquetes=(
 		printf "║                                                  ║\n"
 
 		# Establecer tema oscuro gnome apps
-		sudo -u "$REAL_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
 		draw_spinner $! "Estableciendo tema oscuro"
 
-		sudo -u "$REAL_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" xdg-user-dirs-update > /dev/null 2>&1 &
+		sudo -u "$REAL_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' > /dev/null 2>&1 &
+		draw_spinner $! "Aplicando tema Adwaita-dark"
+
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" xdg-user-dirs-update > /dev/null 2>&1 &
 		draw_spinner $! "Actualizando directorios de usuario"
 
-		sudo -u "$REAL_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.privacy remember-recent-files false > /dev/null 2>&1 &
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.privacy remember-recent-files false > /dev/null 2>&1 &
 		draw_spinner $! "Deshabilitando archivos recientes"
 	}
 
@@ -525,7 +556,7 @@ paquetes=(
 				install_dotfiles
 			elif [ "$opcion" == "4" ]; then
 				draw_header "Actualizando $DISTRO"
-				update 1
+				sys_update
 			elif [ "$opcion" == "5" ]; then
 				draw_header "Configurar GTK"
 				gtk_setup
@@ -534,7 +565,7 @@ paquetes=(
 				install_vscodium
 			elif [ "$opcion" == "7" ]; then
 				draw_header "Instalando Navegador"
-				install_browser 0
+				install_browser 1
 			elif [ "$opcion" == "8" ]; then
 				draw_header "Instalando Fuentes"
 				install_fonts
