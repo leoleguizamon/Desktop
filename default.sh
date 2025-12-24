@@ -57,14 +57,15 @@ sway_apps=(
 )
 
 gnome_apps=(
-	totem
-	eog
-	gnome-disk-utility
-	gnome-text-editor
-	gnome-calculator
-	evince
-	nautilus
-	baobab
+	gnome-sushi  --no-install-recommends
+	totem --no-install-recommends
+	eog --no-install-recommends
+	gnome-disk-utility --no-install-recommends
+	gnome-text-editor --no-install-recommends
+	gnome-calculator --no-install-recommends
+	evince --no-install-recommends
+	nautilus --no-install-recommends
+	baobab --no-install-recommends
 )
 
 utils_apps=(
@@ -389,13 +390,13 @@ paquetes=(
 		draw_space
 
 		apt install -y wget > /dev/null 2>&1 &
-		draw_spinner $! "Instalando... wget"
+		draw_spinner $! "Instalando wget"
 
 		apt install -y gpg > /dev/null 2>&1 &
-		draw_spinner $! "Instalando... gpg"
+		draw_spinner $! "Instalando gpg"
 
 		apt install -y apt-transport-https > /dev/null 2>&1 &
-		draw_spinner $! "Instalando... apt-transport-https"
+		draw_spinner $! "Instalando apt-transport-https"
 		
 		wget -qO - https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg | gpg --dearmor | dd of=/usr/share/keyrings/vscodium-archive-keyring.gpg > /dev/null 2>&1 & 
 		draw_spinner $! "Descargando clave"
@@ -488,12 +489,12 @@ paquetes=(
 		# Actualizar repositorios
 		sys_update
 		draw_separator
-
+		printf "║                                                  ║\n"
 		# Finalizar
 		sleep 2 &
-		draw_spinner $! "Instalacion finalizada"
+		draw_spinner $! "Instalacion finalizada."
 		sleep 3 &
-		draw_spinner $! "Reinicia el sistema ..."
+		draw_spinner $! " ¡¡¡Reinicia el sistema!!! "
 	}
 
 ### GTK
