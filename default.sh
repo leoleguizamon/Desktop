@@ -57,15 +57,15 @@ sway_apps=(
 )
 
 gnome_apps=(
-	gnome-sushi  --no-install-recommends
-	totem --no-install-recommends
-	eog --no-install-recommends
-	gnome-disk-utility --no-install-recommends
-	gnome-text-editor --no-install-recommends
-	gnome-calculator --no-install-recommends
-	evince --no-install-recommends
-	nautilus --no-install-recommends
-	baobab --no-install-recommends
+	"gnome-sushi  --no-install-recommends"
+	"totem --no-install-recommends"
+	"eog --no-install-recommends"
+	"gnome-disk-utility --no-install-recommends"
+	"gnome-text-editor --no-install-recommends"
+	"gnome-calculator --no-install-recommends"
+	"evince --no-install-recommends"
+	"nautilus --no-install-recommends"
+	"baobab --no-install-recommends"
 )
 
 utils_apps=(
