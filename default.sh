@@ -518,20 +518,6 @@ paquetes=(
 	}
 
 	gtk_dracula(){
-		#Dracula theme
-		https://github.com/dracula/gtk/archive/master.zip
-		
-		#Dracula icons
-		https://github.com/dracula/gtk/files/5214870/Dracula.zip
-
-		#Installer
-		https://github.com/odziom91/libadwaita-theme-changer
-		
-		gsettings set org.gnome.desktop.interface icon-theme "Dracula"
-		gsettings set org.gnome.desktop.wm.preferences theme "Dracula"
-		gsettings set org.gnome.desktop.interface gtk-theme "Dracula"
-	}
-	gtk_dracula(){
 		printf "║    Instalando tema Dracula                       ║\n"
 		printf "║                                                  ║\n"
 
