@@ -44,7 +44,6 @@ sys_apps=(
 	lxpolkit
 	pkexec
 	network-manager
-	dbus-x11
 )
 
 sway_apps=(
@@ -502,13 +501,10 @@ paquetes=(
 	gtk_setup(){
 		printf "║    Configurando GTK                              ║\n"
 		printf "║                                                  ║\n"
-
+		
 		# Establecer tema oscuro gnome apps
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
 		draw_spinner $! "Estableciendo tema oscuro"
-
-		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' > /dev/null 2>&1 &
-		draw_spinner $! "Aplicando tema Adwaita-dark"
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" xdg-user-dirs-update > /dev/null 2>&1 &
 		draw_spinner $! "Actualizando directorios de usuario"
