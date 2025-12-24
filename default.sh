@@ -517,6 +517,84 @@ paquetes=(
 		draw_spinner $! "Deshabilitando archivos recientes"
 	}
 
+	gtk_dracula(){
+		#Dracula theme
+		https://github.com/dracula/gtk/archive/master.zip
+		
+		#Dracula icons
+		https://github.com/dracula/gtk/files/5214870/Dracula.zip
+
+		#Installer
+		https://github.com/odziom91/libadwaita-theme-changer
+		
+		gsettings set org.gnome.desktop.interface icon-theme "Dracula"
+		gsettings set org.gnome.desktop.wm.preferences theme "Dracula"
+		gsettings set org.gnome.desktop.interface gtk-theme "Dracula"
+	}
+	gtk_dracula(){
+		printf "║    Instalando tema Dracula                       ║\n"
+		printf "║                                                  ║\n"
+
+		# Crear directorios necesarios
+		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.themes > /dev/null 2>&1
+		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.icons > /dev/null 2>&1
+
+		cd /tmp || exit 1
+
+		# Descargar tema GTK Dracula
+		wget -O dracula-gtk.zip https://github.com/dracula/gtk/archive/master.zip > /dev/null 2>&1 &
+		draw_spinner $! "Descargando tema Dracula GTK"
+
+		# Descargar iconos Dracula
+		wget -O dracula-icons.zip https://github.com/dracula/gtk/files/5214870/Dracula.zip > /dev/null 2>&1 &
+		draw_spinner $! "Descargando iconos Dracula"
+
+		# Descomprimir tema GTK
+		unzip -o dracula-gtk.zip > /dev/null 2>&1 &
+		draw_spinner $! "Descomprimiendo tema GTK"
+
+		# Mover tema a .themes con el nombre correcto
+		if [ -d "gtk-master" ]; then
+			mv gtk-master /home/"$SUDO_USER"/.themes/Dracula > /dev/null 2>&1 &
+			draw_spinner $! "Instalando tema Dracula"
+		fi
+
+		# Descomprimir iconos
+		unzip -o dracula-icons.zip -d /home/"$SUDO_USER"/.icons/ > /dev/null 2>&1 &
+		draw_spinner $! "Instalando iconos Dracula"
+
+		# Descargar libadwaita-theme-changer
+		sudo -u "$SUDO_USER" git clone https://github.com/odziom91/libadwaita-theme-changer > /dev/null 2>&1 &
+		draw_spinner $! "Descargando libadwaita-theme-changer"
+
+		# Ejecutar el instalador de libadwaita
+		if [ -d "libadwaita-theme-changer" ]; then
+			cd libadwaita-theme-changer || exit 1
+			sudo -u "$SUDO_USER" python3 libadwaita-theme-changer.py > /dev/null 2>&1 &
+			draw_spinner $! "Aplicando tema a libadwaita"
+			cd /tmp || exit 1
+		fi
+
+		draw_space
+
+		# Aplicar tema con gsettings
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface icon-theme "Dracula" > /dev/null 2>&1 &
+		draw_spinner $! "Aplicando iconos Dracula"
+
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.wm.preferences theme "Dracula" > /dev/null 2>&1 &
+		draw_spinner $! "Aplicando tema de ventanas Dracula"
+
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface gtk-theme "Dracula" > /dev/null 2>&1 &
+		draw_spinner $! "Aplicando tema GTK Dracula"
+
+		# Limpiar archivos temporales
+		cd /tmp || exit 1
+		rm -rf dracula-gtk.zip dracula-icons.zip gtk-master libadwaita-theme-changer > /dev/null 2>&1 &
+		draw_spinner $! "Limpiando archivos temporales"
+
+		cd - > /dev/null || exit 1
+}
+
 ### FUNCIONES PENDIENTES ###
 
 ### Main menu
@@ -534,6 +612,7 @@ paquetes=(
 			printf "║     ║ 4. Actualizar sistema               ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
 			printf "║     ║ 5. Configurar GTK                   ║      ║\n"
+			printf "║     ║ D. Usar tema Dracula                ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
 			printf "║     ║ 6. Instalar VS Codium               ║      ║\n"	
 			printf "║     ║ 7. Instalar Navegador               ║      ║\n"
@@ -564,6 +643,9 @@ paquetes=(
 			elif [ "$opcion" == "5" ]; then
 				draw_header "Configurar GTK"
 				gtk_setup
+			elif [ "$opcion" == "D" ]; then
+				draw_header "Configurar Tema Dracula"
+				gtk_dracula
 			elif [ "$opcion" == "6" ]; then
 				draw_header "Instalando VSCodium"
 				install_vscodium
