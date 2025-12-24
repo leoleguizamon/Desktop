@@ -598,6 +598,8 @@ paquetes=(
 		rm -rf dracula-gtk.zip zafiro-icons.zip gtk-master > /dev/null 2>&1 &
 		draw_spinner $! "Limpiando archivos temporales"
 
+		fix_electron_cursor
+
 		cd - > /dev/null || exit 1
 	}
 
@@ -606,7 +608,7 @@ paquetes=(
 		printf "║    Configurando cursor para apps Electron        ║\n"
 		printf "║                                                  ║\n"
 
-		sudo -u "$SUDO_USER" mkdir /home/leo/.config/environment.d/
+		sudo -u "$SUDO_USER" mkdir -p /home/leo/.config/environment.d/
 
 		# Configurar variables de entorno
 		CURSOR_ENV="/home/$SUDO_USER/.config/environment.d/cursor.conf"
