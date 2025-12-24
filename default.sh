@@ -606,6 +606,8 @@ paquetes=(
 		printf "║    Configurando cursor para apps Electron        ║\n"
 		printf "║                                                  ║\n"
 
+		sudo -u "$SUDO_USER" mkdir /home/leo/.config/environment.d/
+
 		# Configurar variables de entorno
 		CURSOR_ENV="/home/$SUDO_USER/.config/environment.d/cursor.conf"
 		
