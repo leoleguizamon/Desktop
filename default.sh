@@ -691,7 +691,7 @@ paquetes=(
 				sys_update
 			elif [ "$opcion" == "5" ]; then
 				draw_header "Configurar GTK"
-				
+				gtk_setup
 			elif [ "$opcion" == "D" ]; then
 				draw_header "Configurar Tema Dracula"
 				gtk_dracula
