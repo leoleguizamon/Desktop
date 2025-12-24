@@ -24,6 +24,17 @@ MOZILLA_PREFERENCES='Package: *
 Pin: origin packages.mozilla.org
 Pin-Priority: 1000'
 
+ELECTRONF1='XCURSOR_THEME=Win11OSX
+XCURSOR_SIZE=24
+XCURSOR_PATH=/home/$SUDO_USER/.icons:/usr/share/icons'
+
+ELECTRONF2='--enable-features=UseOzonePlatform
+--ozone-platform=wayland
+--cursor-theme=Win11OSX'
+
+ELECTRONF3='Xcursor.theme: Win11OSX
+Xcursor.size: 24'
+
 deb_paquetes=(
 	brightnessctl
 	playerctl
@@ -57,15 +68,15 @@ sway_apps=(
 )
 
 gnome_apps=(
-	gnome-sushi
-	totem 
-	eog 
-	gnome-disk-utility 
-	gnome-text-editor 
-	gnome-calculator 
-	evince 
-	nautilus 
-	baobab
+	"gnome-sushi  --no-install-recommends"
+	"totem --no-install-recommends"
+	"eog --no-install-recommends"
+	"gnome-disk-utility --no-install-recommends"
+	"gnome-text-editor --no-install-recommends"
+	"gnome-calculator --no-install-recommends"
+	"evince --no-install-recommends"
+	"nautilus --no-install-recommends"
+	"baobab --no-install-recommends"
 )
 
 utils_apps=(
@@ -448,6 +459,8 @@ paquetes=(
 		printf "║    Pensado para instalaciones minimas            ║\n"
 		printf "║    (DEBIAN NETINSTALL)                           ║\n"
 		printf "║                                                  ║\n"
+		printf "║                                                  ║\n"
+
 		draw_footer
 		printf "\033[F\033[F"
 		read -p "║    ¿Deseas continuar? (s/n): " respuesta
@@ -504,14 +517,25 @@ paquetes=(
 		printf "║                                                  ║\n"
 		
 		# Establecer tema oscuro gnome apps
-		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
-		draw_spinner $! "Estableciendo tema oscuro"
-
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" xdg-user-dirs-update > /dev/null 2>&1 &
 		draw_spinner $! "Actualizando directorios de usuario"
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.privacy remember-recent-files false > /dev/null 2>&1 &
 		draw_spinner $! "Deshabilitando archivos recientes"
+
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface icon-theme "Adwaita" > /dev/null 2>&1 &
+		draw_spinner $! "Aplicando iconos Dracula"
+
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.wm.preferences theme "Adwaita" > /dev/null 2>&1 &
+		draw_spinner $! "Aplicando tema de ventanas Dracula"
+
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface gtk-theme "Adwaita" > /dev/null 2>&1 &
+		draw_spinner $! "Aplicando tema GTK Dracula"
+
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
+		draw_spinner $! "Estableciendo tema oscuro"
+
+		fix_electron_cursor
 	}
 
 	gtk_dracula(){
@@ -528,37 +552,36 @@ paquetes=(
 		wget -O dracula-gtk.zip https://github.com/dracula/gtk/archive/master.zip > /dev/null 2>&1 &
 		draw_spinner $! "Descargando tema Dracula GTK"
 
-		# Descargar iconos Dracula
-		wget -O dracula-icons.zip https://github.com/dracula/gtk/files/5214870/Dracula.zip > /dev/null 2>&1 &
-		draw_spinner $! "Descargando iconos Dracula"
-
 		# Descomprimir tema GTK
-		unzip -o dracula-gtk.zip > /dev/null 2>&1 &
+		sudo -u "$SUDO_USER" unzip -o dracula-gtk.zip > /dev/null 2>&1 &
 		draw_spinner $! "Descomprimiendo tema GTK"
 
 		# Mover tema a .themes con el nombre correcto
 		if [ -d "gtk-master" ]; then
-			mv gtk-master /home/"$SUDO_USER"/.themes/Dracula > /dev/null 2>&1 &
+			sudo -u "$SUDO_USER" mv gtk-master /home/"$SUDO_USER"/.themes/Dracula > /dev/null 2>&1 &
 			draw_spinner $! "Instalando tema Dracula"
 		fi
 
-		# Descomprimir iconos
-		unzip -o dracula-icons.zip -d /home/"$SUDO_USER"/.icons/ > /dev/null 2>&1 &
-		draw_spinner $! "Instalando iconos Dracula"
+		# Aplicar tema Dracula a GTK-4 con enlaces simbólicos
+		HOME_DIR="/home/$SUDO_USER"
+		CONFIG_DIR="$HOME_DIR/.config"
+		THEMES_DIR="$HOME_DIR/.themes"
+		THEME_NAME="Dracula"
 
-		# Descargar libadwaita-theme-changer
-		sudo -u "$SUDO_USER" git clone https://github.com/odziom91/libadwaita-theme-changer > /dev/null 2>&1 &
-		draw_spinner $! "Descargando libadwaita-theme-changer"
+		# Crear directorio gtk-4.0 si no existe
+		sudo -u "$SUDO_USER" mkdir -p "$CONFIG_DIR/gtk-4.0"
 
-		# Ejecutar el instalador de libadwaita
-		if [ -d "libadwaita-theme-changer" ]; then
-			cd libadwaita-theme-changer || exit 1
-			sudo -u "$SUDO_USER" python3 libadwaita-theme-changer.py > /dev/null 2>&1 &
-			draw_spinner $! "Aplicando tema a libadwaita"
-			cd /tmp || exit 1
-		fi
+		# Crear enlaces simbólicos
+		sudo -u "$SUDO_USER" ln -sf "$THEMES_DIR/$THEME_NAME/gtk-4.0/gtk.css" "$CONFIG_DIR/gtk-4.0/gtk.css"
+		sudo -u "$SUDO_USER" ln -sf "$THEMES_DIR/$THEME_NAME/gtk-4.0/gtk-dark.css" "$CONFIG_DIR/gtk-4.0/gtk-dark.css"
+		sudo -u "$SUDO_USER" ln -sf "$THEMES_DIR/$THEME_NAME/gtk-4.0/assets" "$CONFIG_DIR/gtk-4.0/assets"
+		sudo -u "$SUDO_USER" ln -sf "$THEMES_DIR/$THEME_NAME/assets" "$CONFIG_DIR/assets"
 
 		draw_space
+
+		# Descargar iconos Dracula
+		apt install papirus-icon-theme > /dev/null 2>&1 &
+		draw_spinner $! "Instalando iconos papirus"
 
 		# Aplicar tema con gsettings
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface icon-theme "Dracula" > /dev/null 2>&1 &
@@ -572,13 +595,54 @@ paquetes=(
 
 		# Limpiar archivos temporales
 		cd /tmp || exit 1
-		rm -rf dracula-gtk.zip dracula-icons.zip gtk-master libadwaita-theme-changer > /dev/null 2>&1 &
+		rm -rf dracula-gtk.zip zafiro-icons.zip gtk-master > /dev/null 2>&1 &
 		draw_spinner $! "Limpiando archivos temporales"
 
 		cd - > /dev/null || exit 1
-}
+	}
 
-### FUNCIONES PENDIENTES ###
+### FUNCIONES Vivecode (Revisar) ###
+	fix_electron_cursor(){
+		printf "║    Configurando cursor para apps Electron        ║\n"
+		printf "║                                                  ║\n"
+
+		# Configurar variables de entorno
+		CURSOR_ENV="/home/$SUDO_USER/.config/environment.d/cursor.conf"
+		
+		echo "$ELECTRONF1" | sudo -u "$SUDO_USER" tee "$CURSOR_ENV" > /dev/null
+
+		sleep 0.5 &
+		draw_spinner $! "Configurando variables de entorno"
+
+		# Crear electron-flags.conf
+		ELECTRON_FLAGS="/home/$SUDO_USER/.config/electron-flags.conf"
+		
+		echo "$ELECTRONF2" | sudo -u "$SUDO_USER" tee "$ELECTRON_FLAGS" > /dev/null
+
+		sleep 0.5 &
+		draw_spinner $! "Configurando Electron flags"
+
+		# Crear .Xresources para apps XWayland
+		XRESOURCES="/home/$SUDO_USER/.Xresources"
+		
+		echo "$ELECTRONF3" | sudo -u "$SUDO_USER" tee "$XRESOURCES" > /dev/null
+
+		sleep 0.5 &
+		draw_spinner $! "Configurando Xresources"
+
+		# Agregar a Sway config si existe
+		SWAY_CONFIG="/home/$SUDO_USER/.config/sway/config"
+		if [ -f "$SWAY_CONFIG" ]; then
+			if ! grep -q "xrdb -merge" "$SWAY_CONFIG" 2>/dev/null; then
+				echo "exec_always xrdb -merge ~/.Xresources" >> "$SWAY_CONFIG"
+				sleep 0.5 &
+				draw_spinner $! "Agregando xrdb a Sway config"
+			fi
+		fi
+
+		# Ajustar permisos
+		chown "$SUDO_USER":"$SUDO_USER" "$CURSOR_ENV" "$ELECTRON_FLAGS" "$XRESOURCES" > /dev/null 2>&1
+	}
 
 ### Main menu
 
@@ -625,7 +689,7 @@ paquetes=(
 				sys_update
 			elif [ "$opcion" == "5" ]; then
 				draw_header "Configurar GTK"
-				gtk_setup
+				
 			elif [ "$opcion" == "D" ]; then
 				draw_header "Configurar Tema Dracula"
 				gtk_dracula
