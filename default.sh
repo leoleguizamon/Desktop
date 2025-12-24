@@ -359,7 +359,7 @@ paquetes=(
 			printf "\033[F"
 			printf "║                                                  ║\n"
 		elif [ $1 -eq 0 ]; then
-			opcion=1
+			opcion=2
 		fi
 
 			printf "║                                                  ║\n"
