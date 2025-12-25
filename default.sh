@@ -471,18 +471,6 @@ paquetes=(
 		draw_space
 		draw_separator
 		
-		# Instalar sway
-		install_sway 0
-		draw_separator
-
-		# Instalar nerd fonts
-		install_fonts
-		draw_separator
-		
-		# Instalar dotfiles
-		install_dotfiles
-		draw_separator
-		
 		# Instalar VSCodium
 		install_vscodium
 		draw_separator
@@ -491,12 +479,28 @@ paquetes=(
 		install_browser 0
 		draw_separator
 
+		# Instalar sway
+		install_sway 0
+		draw_separator
+		
+		# Instalar dotfiles
+		install_dotfiles
+		draw_separator
+		
+		# Instalar nerd fonts
+		install_fonts
+		draw_separator
+
 		# Establecer tema oscuro
 		gtk_setup
 		draw_separator
 
 		# Eliminar networkmanager
 		sys_setNetwork
+		draw_separator
+
+		# Electron Config
+		fix_electron_cursor
 		draw_separator
 
 		# Actualizar repositorios
@@ -534,8 +538,6 @@ paquetes=(
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
 		draw_spinner $! "Estableciendo tema oscuro"
-
-		fix_electron_cursor
 	}
 
 	gtk_dracula(){
@@ -597,8 +599,6 @@ paquetes=(
 		cd /tmp || exit 1
 		rm -rf dracula-gtk.zip zafiro-icons.zip gtk-master > /dev/null 2>&1 &
 		draw_spinner $! "Limpiando archivos temporales"
-
-		fix_electron_cursor
 
 		cd - > /dev/null || exit 1
 	}
