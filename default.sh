@@ -300,11 +300,10 @@ paquetes=(
 ### Install
 
 	install_sway(){
-		printf "║    Instalando Entorno Sway                       ║\n"
-		printf "║                                                  ║\n"
-		
 		
 		if [ $1 -eq 1 ]; then
+			printf "║    Instalando Entorno Sway                       ║\n"
+			printf "║                                                  ║\n"
 			apt update > /dev/null 2>&1 &
 			draw_spinner $! "Actualizando lista de paquetes"
 			
@@ -313,7 +312,9 @@ paquetes=(
 				apt install $paquete -y > /dev/null 2>&1 &
 				draw_spinner $! "Instalando $paquete"
 			done
-		elif [ $1 -eq 2 ]; then 
+		elif [ $1 -eq 2 ]; then
+			printf "║    Instalando Gnome-apps                         ║\n"
+			printf "║                                                  ║\n"
 			apt update > /dev/null 2>&1 &
 			draw_spinner $! "Actualizando lista de paquetes"
 
@@ -539,10 +540,12 @@ paquetes=(
 
 		#Gnome apps
 		install_sway 2 0
+		draw_separator
 
 		# Actualizar repositorios
 		sys_update
 		draw_separator
+
 		printf "║                                                  ║\n"
 		# Finalizar
 		sleep 2 &
@@ -574,7 +577,7 @@ paquetes=(
 			printf "\033[F"
 			printf "║                                                  ║\n"
 		elif [ $1 -eq 0 ]; then
-			opcion=2
+			opcion=1
 		fi
 		printf "║                                                  ║\n"
 		if [ "$opcion" -eq 1 ]; then
@@ -587,6 +590,9 @@ paquetes=(
 	}
 
 	gtk_dark(){
+		#Removiendo config anteriores
+		find /home/leo/.config/gtk-4.0/ -mindepth 1 ! -name 'settings.ini' -exec rm -rf {} +
+		
 		# Establecer tema oscuro gnome apps
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" xdg-user-dirs-update > /dev/null 2>&1 &
 		draw_spinner $! "Actualizando directorios de usuario"
@@ -595,13 +601,13 @@ paquetes=(
 		draw_spinner $! "Deshabilitando archivos recientes"
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface icon-theme "Adwaita" > /dev/null 2>&1 &
-		draw_spinner $! "Aplicando iconos Dracula"
+		draw_spinner $! "Aplicando iconos Adwaita"
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.wm.preferences theme "Adwaita" > /dev/null 2>&1 &
-		draw_spinner $! "Aplicando tema de ventanas Dracula"
+		draw_spinner $! "Aplicando tema de ventanas Adwaita"
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface gtk-theme "Adwaita" > /dev/null 2>&1 &
-		draw_spinner $! "Aplicando tema GTK Dracula"
+		draw_spinner $! "Aplicando tema GTK Adwaita"
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
 		draw_spinner $! "Estableciendo tema oscuro"
