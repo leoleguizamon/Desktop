@@ -538,9 +538,14 @@ paquetes=(
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
 		draw_spinner $! "Estableciendo tema oscuro"
+
+		fix_electron_cursor
+		fix_electron_cursor
+		draw_separator
 	}
 
 	gtk_dracula(){
+		draw_space
 		printf "║    Instalando tema Dracula                       ║\n"
 		printf "║                                                  ║\n"
 
@@ -599,7 +604,10 @@ paquetes=(
 		cd /tmp || exit 1
 		rm -rf dracula-gtk.zip zafiro-icons.zip gtk-master > /dev/null 2>&1 &
 		draw_spinner $! "Limpiando archivos temporales"
-
+		
+		fix_electron_cursor
+		fix_electron_cursor
+		
 		cd - > /dev/null || exit 1
 	}
 
