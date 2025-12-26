@@ -35,6 +35,9 @@ ELECTRONF2='--enable-features=UseOzonePlatform
 ELECTRONF3='Xcursor.theme: Win11OSX
 Xcursor.size: 24'
 
+DARK_THEME='[Settings]
+gtk-application-prefer-dark-theme=true'
+
 deb_paquetes=(
 	brightnessctl
 	playerctl
@@ -68,15 +71,14 @@ sway_apps=(
 )
 
 gnome_apps=(
-	"gnome-sushi  --no-install-recommends"
-	"totem --no-install-recommends"
-	"eog --no-install-recommends"
-	"gnome-disk-utility --no-install-recommends"
-	"gnome-text-editor --no-install-recommends"
-	"gnome-calculator --no-install-recommends"
-	"evince --no-install-recommends"
-	"nautilus --no-install-recommends"
-	"baobab --no-install-recommends"
+	"totem"
+	"eog"
+	"gnome-disk-utility"
+	"gnome-text-editor"
+	"gnome-calculator"
+	"evince"
+	"nautilus"
+	"baobab"
 )
 
 utils_apps=(
@@ -303,7 +305,6 @@ paquetes=(
 		
 		if [ $1 -eq 1 ]; then
 			printf "║    Instalando Entorno Sway                       ║\n"
-			printf "║                                                  ║\n"
 			apt update > /dev/null 2>&1 &
 			draw_spinner $! "Actualizando lista de paquetes"
 			
@@ -314,7 +315,6 @@ paquetes=(
 			done
 		elif [ $1 -eq 2 ]; then
 			printf "║    Instalando Gnome-apps                         ║\n"
-			printf "║                                                  ║\n"
 			apt update > /dev/null 2>&1 &
 			draw_spinner $! "Actualizando lista de paquetes"
 
@@ -383,9 +383,11 @@ paquetes=(
 		fi
 		
 		if [ "$opcion" -eq 1 ]; then
+			printf "║    Instalando Brave                              ║\n"
 			curl -fsS https://dl.brave.com/install.sh | sh > /dev/null 2>&1 &
 			draw_spinner $! "Instalando Brave"
 		elif [ "$opcion" -eq 2 ]; then
+			printf "║    Instalando Firefox                            ║\n"
 			# Crear directorio para claves APT
 			install -d -m 0755 /etc/apt/keyrings > /dev/null 2>&1 &
 			draw_spinner $! "Creando directorio de claves"
@@ -566,6 +568,7 @@ paquetes=(
 			printf "║     ╔═════════════════════════════════════╗      ║\n"
 			printf "║     ║ 1. Dracula                          ║      ║\n"
 			printf "║     ║ 2. GTK Oscuro                       ║      ║\n"
+			printf "║     ║ 3. GTK Claro                        ║      ║\n"
 			printf "║     ╚═════════════════════════════════════╝      ║\n"
 			printf "║                                                  ║\n"
 			printf "║                                                  ║\n"
@@ -580,25 +583,30 @@ paquetes=(
 			opcion=1
 		fi
 		printf "║                                                  ║\n"
+
 		if [ "$opcion" -eq 1 ]; then
 			gtk_dracula
 		elif [ "$opcion" -eq 2 ]; then
-			gtk_dark
+			gtk_adwaita 0
+		elif [ "$opcion" -eq 3 ]; then
+			gtk_adwaita 1
 		else
 			sys_invalid
 		fi
-	}
-
-	gtk_dark(){
-		#Removiendo config anteriores
-		find /home/leo/.config/gtk-4.0/ -mindepth 1 ! -name 'settings.ini' -exec rm -rf {} +
-		
-		# Establecer tema oscuro gnome apps
-		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" xdg-user-dirs-update > /dev/null 2>&1 &
-		draw_spinner $! "Actualizando directorios de usuario"
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.privacy remember-recent-files false > /dev/null 2>&1 &
-		draw_spinner $! "Deshabilitando archivos recientes"
+    	draw_spinner $! "Deshabilitando archivos recientes"
+
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" xdg-user-dirs-update > /dev/null 2>&1 &
+		draw_spinner $! "Actualizando directorios de usuario"
+	}
+
+	gtk_adwaita(){
+		rm -rf /home/leo/.config/gtk-3.0 > /dev/null 2>&1 &
+		draw_spinner $! "Eliminando configuracion GTK"
+
+		rm -rf /home/leo/.config/gtk-4.0 > /dev/null 2>&1 &
+		draw_spinner $! "Eliminando configuracion GTK"
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface icon-theme "Adwaita" > /dev/null 2>&1 &
 		draw_spinner $! "Aplicando iconos Adwaita"
@@ -608,9 +616,22 @@ paquetes=(
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface gtk-theme "Adwaita" > /dev/null 2>&1 &
 		draw_spinner $! "Aplicando tema GTK Adwaita"
+		
+		if [ $1 -eq 0 ]; then
+        	sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
+        	draw_spinner $! "Estableciendo tema oscuro"
 
-		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
-		draw_spinner $! "Estableciendo tema oscuro"
+			echo "$DARK_THEME" | sudo -u "$SUDO_USER" tee /home/"$SUDO_USER"/.config/gtk-3.0/settings.ini > /dev/null 2>&1 &
+			draw_spinner $! "Configurando GTK 3.0 oscuro"
+
+			echo "$DARK_THEME" | sudo -u "$SUDO_USER" tee /home/"$SUDO_USER"/.config/gtk-4.0/settings.ini > /dev/null 2>&1 &
+			draw_spinner $! "Configurando GTK 4.0 oscuro"
+    	elif [ $1 -eq 1 ]; then
+			sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'default' > /dev/null 2>&1 &
+			draw_spinner $! "Estableciendo tema claro"
+		else
+			sys_invalid
+    	fi
 	}
 
 	gtk_dracula(){
@@ -648,8 +669,6 @@ paquetes=(
 		sudo -u "$SUDO_USER" ln -sf "$THEMES_DIR/$THEME_NAME/gtk-4.0/gtk-dark.css" "$CONFIG_DIR/gtk-4.0/gtk-dark.css"
 		sudo -u "$SUDO_USER" ln -sf "$THEMES_DIR/$THEME_NAME/gtk-4.0/assets" "$CONFIG_DIR/gtk-4.0/assets"
 		sudo -u "$SUDO_USER" ln -sf "$THEMES_DIR/$THEME_NAME/assets" "$CONFIG_DIR/assets"
-
-		draw_space
 
 		# Descargar iconos Dracula
 		apt install papirus-icon-theme > /dev/null 2>&1 &
