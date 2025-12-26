@@ -107,7 +107,6 @@ paquetes=(
 	"${deb_paquetes[@]}"
 	"${sys_apps[@]}"
 	"${sway_apps[@]}"
-	"${gnome_apps[@]}"
 	"${utils_apps[@]}"
 	"${multimedia_apps[@]}"
 )
@@ -226,6 +225,16 @@ paquetes=(
 		draw_footer
 	}
 
+	sys_basics(){
+
+		printf "║                                                  ║\n"
+		apt install -y wget > /dev/null 2>&1 &
+		draw_spinner $! "Verificando wget"
+
+		apt install -y gpg > /dev/null 2>&1 &
+		draw_spinner $! "Verificando gpg"
+	}
+
 ### Sistema
 	sys_exit(){
 		printf "║                                                  ║\n"
@@ -294,26 +303,36 @@ paquetes=(
 		printf "║    Instalando Entorno Sway                       ║\n"
 		printf "║                                                  ║\n"
 		
-		# Actualizar repositorios
-		apt update > /dev/null 2>&1 &
-		draw_spinner $! "Actualizando lista de paquetes"
 		
-		# Verificar e instalar los paquetes disponibles
-		draw_space
-		for paquete in "${paquetes[@]}"; do
-			apt install $paquete -y > /dev/null 2>&1 &
-			draw_spinner $! "Instalando $paquete"
-		done
+		if [ $1 -eq 1 ]; then
+			apt update > /dev/null 2>&1 &
+			draw_spinner $! "Actualizando lista de paquetes"
+			
+			draw_space
+			for paquete in "${paquetes[@]}"; do
+				apt install $paquete -y > /dev/null 2>&1 &
+				draw_spinner $! "Instalando $paquete"
+			done
+		elif [ $1 -eq 2 ]; then 
+			apt update > /dev/null 2>&1 &
+			draw_spinner $! "Actualizando lista de paquetes"
 
-		apt autoremove -y > /dev/null 2>&1 &
-		draw_spinner $! "Limpiando"
+			draw_space
+			for paquete in "${gnome_apps[@]}"; do
+				apt install $paquete -y > /dev/null 2>&1 &
+				draw_spinner $! "Instalando $paquete"
+			done
 
+		fi
 		# Permisos DDCutil
 		modprobe i2c-dev
 		usermod -aG i2c $SUDO_USER
 
+		apt autoremove -y > /dev/null 2>&1 &
+		draw_spinner $! "Limpiando"
+
 		# Aviso
-		if [ $1 -eq 1 ]; then
+		if [ $2 -eq 1 ]; then
 			draw_space
 			sleep 5 &
 			draw_spinner $! "Se recomienda reiniciar el sistema"
@@ -361,8 +380,7 @@ paquetes=(
 		elif [ $1 -eq 0 ]; then
 			opcion=2
 		fi
-
-			printf "║                                                  ║\n"
+		
 		if [ "$opcion" -eq 1 ]; then
 			curl -fsS https://dl.brave.com/install.sh | sh > /dev/null 2>&1 &
 			draw_spinner $! "Instalando Brave"
@@ -396,32 +414,48 @@ paquetes=(
 
 	install_vscodium(){
 		printf "║    Instalando VSCodium                           ║\n"
+		
+		if [ $1 -eq 1 ]; then
+			printf "║                                                  ║\n"
+			printf "║    Desea instalar VScodium?:                     ║\n"
+			printf "║                                                  ║\n"
+			printf "║     ╔═════════════════════════════════════╗      ║\n"
+			printf "║     ║ 1. Si                               ║      ║\n"
+			printf "║     ║ 2. No                               ║      ║\n"
+			printf "║     ╚═════════════════════════════════════╝      ║\n"
+			printf "║                                                  ║\n"
+			printf "║                                                  ║\n"
+			printf "║                                                  ║\n"
+
+			draw_footer
+			printf "\033[F\033[F"
+			read -p "║     Selecciona opcion: " opcion
+			printf "\033[F"
+			printf "║                                                  ║\n"
+		elif [ $1 -eq 0 ]; then
+			opcion=1
+		fi
 		printf "║                                                  ║\n"
+		if [ "$opcion" -eq 1 ]; then
+			wget -qO - https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg | gpg --dearmor | dd of=/usr/share/keyrings/vscodium-archive-keyring.gpg > /dev/null 2>&1 & 
+			draw_spinner $! "Descargando clave"
+			
+			echo -e 'Types: deb\nURIs: https://download.vscodium.com/debs\nSuites: vscodium\nComponents: main\nArchitectures: amd64 arm64\nSigned-by: /usr/share/keyrings/vscodium-archive-keyring.gpg' | sudo tee /etc/apt/sources.list.d/vscodium.sources > /dev/null 2>&1 &
+			draw_spinner $! "Agregando repositorio"
+			
+			apt update > /dev/null 2>&1 &
+			draw_spinner $! "Actualizando"
 
-		draw_space
-
-		apt install -y wget > /dev/null 2>&1 &
-		draw_spinner $! "Instalando wget"
-
-		apt install -y gpg > /dev/null 2>&1 &
-		draw_spinner $! "Instalando gpg"
-
-		apt install -y apt-transport-https > /dev/null 2>&1 &
-		draw_spinner $! "Instalando apt-transport-https"
-		
-		wget -qO - https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg | gpg --dearmor | dd of=/usr/share/keyrings/vscodium-archive-keyring.gpg > /dev/null 2>&1 & 
-		draw_spinner $! "Descargando clave"
-		
-		echo -e 'Types: deb\nURIs: https://download.vscodium.com/debs\nSuites: vscodium\nComponents: main\nArchitectures: amd64 arm64\nSigned-by: /usr/share/keyrings/vscodium-archive-keyring.gpg' | sudo tee /etc/apt/sources.list.d/vscodium.sources > /dev/null 2>&1 &
-		draw_spinner $! "Agregando repositorio"
-		
-		apt update > /dev/null 2>&1 &
-		draw_spinner $! "Actualizando"
-
-		draw_space
-		
-		apt install -y codium > /dev/null 2>&1 &
-		draw_spinner $! "Instalando VSCodium"
+			draw_space
+			
+			apt install -y codium > /dev/null 2>&1 &
+			draw_spinner $! "Instalando VSCodium"
+		elif [ "$opcion" -eq 2 ]; then
+			sleep 0.2 &
+			draw_spinner $! "Omitiendo"
+		else
+			sys_invalid
+		fi
 	}
 
 	install_fonts(){
@@ -470,19 +504,19 @@ paquetes=(
 		fi
 		draw_space
 		draw_separator
+
+		# Instalar sway
+		install_sway 1 0
+		draw_separator
 		
 		# Instalar VSCodium
-		install_vscodium
+		install_vscodium 0
 		draw_separator
 		
 		# Instalar Navegadores
 		install_browser 0
 		draw_separator
 
-		# Instalar sway
-		install_sway 0
-		draw_separator
-		
 		# Instalar dotfiles
 		install_dotfiles
 		draw_separator
@@ -492,7 +526,7 @@ paquetes=(
 		draw_separator
 
 		# Establecer tema oscuro
-		gtk_setup
+		gtk_setup 0
 		draw_separator
 
 		# Eliminar networkmanager
@@ -503,6 +537,9 @@ paquetes=(
 		fix_electron_cursor
 		draw_separator
 
+		#Gnome apps
+		install_sway 2 0
+
 		# Actualizar repositorios
 		sys_update
 		draw_separator
@@ -511,15 +548,45 @@ paquetes=(
 		sleep 2 &
 		draw_spinner $! "Instalacion finalizada."
 		sleep 3 &
-		draw_spinner $! " ¡¡¡Reinicia el sistema!!! "
+		draw_spinner $! "Reinicia el sistema"
 	}
 
 ### GTK
 
 	gtk_setup(){
-		printf "║    Configurando GTK                              ║\n"
+		printf "║    Configurando Temas                            ║\n"
+
+		if [ $1 -eq 1 ]; then
+			printf "║                                                  ║\n"
+			printf "║    Selecciona un tema:                           ║\n"
+			printf "║                                                  ║\n"
+			printf "║     ╔═════════════════════════════════════╗      ║\n"
+			printf "║     ║ 1. Dracula                          ║      ║\n"
+			printf "║     ║ 2. GTK Oscuro                       ║      ║\n"
+			printf "║     ╚═════════════════════════════════════╝      ║\n"
+			printf "║                                                  ║\n"
+			printf "║                                                  ║\n"
+			printf "║                                                  ║\n"
+
+			draw_footer
+			printf "\033[F\033[F"
+			read -p "║     Selecciona opcion: " opcion
+			printf "\033[F"
+			printf "║                                                  ║\n"
+		elif [ $1 -eq 0 ]; then
+			opcion=2
+		fi
 		printf "║                                                  ║\n"
-		
+		if [ "$opcion" -eq 1 ]; then
+			gtk_dracula
+		elif [ "$opcion" -eq 2 ]; then
+			gtk_dark
+		else
+			sys_invalid
+		fi
+	}
+
+	gtk_dark(){
 		# Establecer tema oscuro gnome apps
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" xdg-user-dirs-update > /dev/null 2>&1 &
 		draw_spinner $! "Actualizando directorios de usuario"
@@ -538,17 +605,9 @@ paquetes=(
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
 		draw_spinner $! "Estableciendo tema oscuro"
-
-		fix_electron_cursor
-		fix_electron_cursor
-		draw_separator
 	}
 
 	gtk_dracula(){
-		draw_space
-		printf "║    Instalando tema Dracula                       ║\n"
-		printf "║                                                  ║\n"
-
 		# Crear directorios necesarios
 		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.themes > /dev/null 2>&1
 		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.icons > /dev/null 2>&1
@@ -604,10 +663,7 @@ paquetes=(
 		cd /tmp || exit 1
 		rm -rf dracula-gtk.zip zafiro-icons.zip gtk-master > /dev/null 2>&1 &
 		draw_spinner $! "Limpiando archivos temporales"
-		
-		fix_electron_cursor
-		fix_electron_cursor
-		
+
 		cd - > /dev/null || exit 1
 	}
 
@@ -661,27 +717,25 @@ paquetes=(
 	main(){
 		while true; do
 			draw_header "Instalador de SWAY"
-			printf "║      Selecciona una opcion:                      ║\n"
+			printf "║     %.40s %*s ║\n" "$DISTRO" $(( ${#DISTRO} < 43 ? 43 - ${#DISTRO} : 3  )) ""
 			printf "║                                                  ║\n"
 			printf "║     ╔═════════════════════════════════════╗      ║\n"
 			printf "║     ║ 1. Instalar LeOS (Full install)     ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
 			printf "║     ║ 2. Instalar Sway                    ║      ║\n"
 			printf "║     ║ 3. Copiar dotfiles                  ║      ║\n"
-			printf "║     ║ 4. Actualizar sistema               ║      ║\n"
+			printf "║     ║ 4. Instalar Gnome apps              ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
 			printf "║     ║ 5. Configurar GTK                   ║      ║\n"
-			printf "║     ║ D. Usar tema Dracula                ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
 			printf "║     ║ 6. Instalar VS Codium               ║      ║\n"	
 			printf "║     ║ 7. Instalar Navegador               ║      ║\n"
-			printf "║     ║ 8. Instalar Fuentes                 ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
+			printf "║     ║ 8. Actualizar sistema               ║      ║\n"
 			printf "║     ║ 9. Reiniciar el sistema             ║      ║\n"
 			printf "║     ║ 0. Salir                            ║      ║\n"
 			printf "║     ╚═════════════════════════════════════╝      ║\n"
 			printf "║                                                  ║\n"
-			printf "║     %.40s %*s ║\n" "$DISTRO" $(( ${#DISTRO} < 43 ? 43 - ${#DISTRO} : 3  )) ""
 			printf "║                                                  ║\n"
 			printf "║                                                  ║\n"
 			draw_footer
@@ -692,28 +746,27 @@ paquetes=(
 				full_install
 			elif [ "$opcion" == "2" ]; then
 				draw_header "Instalando Escritorio Sway"
-				install_sway 1
+				install_sway 1 1
 			elif [ "$opcion" == "3" ]; then
 				draw_header "Descarga de dotfiles"
 				install_dotfiles
 			elif [ "$opcion" == "4" ]; then
-				draw_header "Actualizando $DISTRO"
-				sys_update
+				draw_header "Instalando Gnome apps"
+				install_sway 2 1
 			elif [ "$opcion" == "5" ]; then
 				draw_header "Configurar GTK"
-				gtk_setup
-			elif [ "$opcion" == "D" ]; then
-				draw_header "Configurar Tema Dracula"
-				gtk_dracula
+				gtk_setup 1
 			elif [ "$opcion" == "6" ]; then
 				draw_header "Instalando VSCodium"
-				install_vscodium
+				install_vscodium 1
 			elif [ "$opcion" == "7" ]; then
 				draw_header "Instalando Navegador"
 				install_browser 1
 			elif [ "$opcion" == "8" ]; then
-				draw_header "Instalando Fuentes"
-				install_fonts
+				draw_header "Actualizando $DISTRO"
+				sys_update
+				draw_header "Reparar webApps"
+				fix_electron_cursor
 			elif [ "$opcion" == "9" ]; then
 				draw_header "Reiniciando el sistema"
 				sys_reboot
@@ -729,22 +782,25 @@ paquetes=(
 
 ### MAIN ###
 
-draw_header "Verificando..."
+draw_header "Bienvenido"
 printf "║                                                  ║\n"
 
 sleep 0.2 &
-draw_spinner $! "Verificando permisos de sudo..."
+draw_spinner $! "Verificando permisos de sudo"
 ver_sudo
 
 sudo rm -rf .git 2>/dev/null
 
 sleep 0.2 &
-draw_spinner $! "Verificando distribucion..."
+draw_spinner $! "Verificando distribucion"
 ver_distro
 
 sleep 0.2 &
-draw_spinner $! "Creando carpetas de usuario..."
+draw_spinner $! "Creando carpetas de usuario"
 sys_mkDir
+
+draw_separator
+sys_basics
 
 cd /home/"$SUDO_USER"/Desktop/
 
