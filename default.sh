@@ -79,7 +79,6 @@ gnome_apps=(
 	"evince --no-install-recommends"
 	"nautilus --no-install-recommends"
 	"baobab --no-install-recommends"
-	gsettings-desktop-schemas
 )
 
 utils_apps=(
@@ -584,6 +583,9 @@ paquetes=(
 			opcion=1
 		fi
 		printf "║                                                  ║\n"
+		
+		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/gtk-3.0 > /dev/null 2>&1
+		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/gtk-4.0 > /dev/null 2>&1
 
 		if [ "$opcion" -eq 1 ]; then
 			gtk_dracula
@@ -603,10 +605,11 @@ paquetes=(
 	}
 
 	gtk_adwaita(){
-		rm -rf /home/leo/.config/gtk-3.0 > /dev/null 2>&1 &
+
+		rm -rf /home/"$SUDO_USER"/.config/gtk-3.0/* > /dev/null 2>&1 &
 		draw_spinner $! "Eliminando configuracion GTK"
 
-		rm -rf /home/leo/.config/gtk-4.0 > /dev/null 2>&1 &
+		rm -rf /home/"$SUDO_USER"/.config/gtk-4.0/* > /dev/null 2>&1 &
 		draw_spinner $! "Eliminando configuracion GTK"
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface icon-theme "Adwaita" > /dev/null 2>&1 &
@@ -662,9 +665,6 @@ paquetes=(
 		THEMES_DIR="$HOME_DIR/.themes"
 		THEME_NAME="Dracula"
 
-		# Crear directorio gtk-4.0 si no existe
-		sudo -u "$SUDO_USER" mkdir -p "$CONFIG_DIR/gtk-4.0"
-
 		# Crear enlaces simbólicos
 		sudo -u "$SUDO_USER" ln -sf "$THEMES_DIR/$THEME_NAME/gtk-4.0/gtk.css" "$CONFIG_DIR/gtk-4.0/gtk.css"
 		sudo -u "$SUDO_USER" ln -sf "$THEMES_DIR/$THEME_NAME/gtk-4.0/gtk-dark.css" "$CONFIG_DIR/gtk-4.0/gtk-dark.css"
@@ -698,7 +698,7 @@ paquetes=(
 		printf "║    Configurando cursor para apps Electron        ║\n"
 		printf "║                                                  ║\n"
 
-		sudo -u "$SUDO_USER" mkdir -p /home/leo/.config/environment.d/
+		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/environment.d/
 
 		# Configurar variables de entorno
 		CURSOR_ENV="/home/$SUDO_USER/.config/environment.d/cursor.conf"
