@@ -71,14 +71,15 @@ sway_apps=(
 )
 
 gnome_apps=(
-	"totem"
-	"eog"
-	"gnome-disk-utility"
-	"gnome-text-editor"
-	"gnome-calculator"
-	"evince"
-	"nautilus"
-	"baobab"
+	"totem --no-install-recommends"
+	"eog --no-install-recommends"
+	"gnome-disk-utility --no-install-recommends"
+	"gnome-text-editor --no-install-recommends"
+	"gnome-calculator --no-install-recommends"
+	"evince --no-install-recommends"
+	"nautilus --no-install-recommends"
+	"baobab --no-install-recommends"
+	gsettings-desktop-schemas
 )
 
 utils_apps=(
