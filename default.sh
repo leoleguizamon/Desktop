@@ -13,30 +13,39 @@ USER_ID=$(id -u "$SUDO_USER")
 DBUS_ADDR="unix:path=/run/user/$USER_ID/bus"
 
 # Configuración de repositorio Mozilla
-MOZILLA_SOURCES='Types: deb
+MOZILLA_SOURCES="Types: deb
 URIs: https://packages.mozilla.org/apt
 Suites: mozilla
 Components: main
-Signed-By: /etc/apt/keyrings/packages.mozilla.org.asc'
+Signed-By: /etc/apt/keyrings/packages.mozilla.org.asc"
 
 # Configuración de prioridad Mozilla
-MOZILLA_PREFERENCES='Package: *
+MOZILLA_PREFERENCES="Package: *
 Pin: origin packages.mozilla.org
-Pin-Priority: 1000'
+Pin-Priority: 1000"
 
-ELECTRONF1='XCURSOR_THEME=Win11OSX
+ELECTRONF1="XCURSOR_THEME=Win11OSX
 XCURSOR_SIZE=24
-XCURSOR_PATH=/home/$SUDO_USER/.icons:/usr/share/icons'
+XCURSOR_PATH=/home/$SUDO_USER/.icons:/usr/share/icons"
 
-ELECTRONF2='--enable-features=UseOzonePlatform
+ELECTRONF2="--enable-features=UseOzonePlatform
 --ozone-platform=wayland
---cursor-theme=Win11OSX'
+--cursor-theme=Win11OSX"
 
-ELECTRONF3='Xcursor.theme: Win11OSX
-Xcursor.size: 24'
+ELECTRONF3="Xcursor.theme: Win11OSX
+Xcursor.size: 24"
 
-DARK_THEME='[Settings]
-gtk-application-prefer-dark-theme=true'
+DARK_THEME="[Settings]
+gtk-application-prefer-dark-theme=true"
+
+BOOKMARKS="file:///home/$SUDO_USER/Documents Documents
+file:///home/$SUDO_USER/Downloads Downloads
+file:///home/$SUDO_USER/Music Music
+file:///home/$SUDO_USER/Pictures Pictures
+file:///home/$SUDO_USER/Videos Videos
+file:///home/$SUDO_USER/Desktop Desktop
+file:///home/$SUDO_USER/Templates Templates
+file:///home/$SUDO_USER/Public Public"
 
 deb_paquetes=(
 	brightnessctl
@@ -71,14 +80,14 @@ sway_apps=(
 )
 
 gnome_apps=(
-	"totem --no-install-recommends"
-	"eog --no-install-recommends"
-	"gnome-disk-utility --no-install-recommends"
-	"gnome-text-editor --no-install-recommends"
-	"gnome-calculator --no-install-recommends"
-	"evince --no-install-recommends"
-	"nautilus --no-install-recommends"
-	"baobab --no-install-recommends"
+	"totem"
+	"eog"
+	"gnome-disk-utility"
+	"gnome-text-editor"
+	"gnome-calculator"
+	"evince"
+	"nautilus"
+	"baobab"
 )
 
 utils_apps=(
@@ -602,6 +611,11 @@ paquetes=(
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" xdg-user-dirs-update > /dev/null 2>&1 &
 		draw_spinner $! "Actualizando directorios de usuario"
+
+		BOOKMARKS_FILE="/home/$SUDO_USER/.config/gtk-3.0/bookmarks"
+
+		echo "$BOOKMARKS" | sudo -u "$SUDO_USER" tee "$BOOKMARKS_FILE" > /dev/null 2>&1 &
+		draw_spinner $! "Creando bookmarks de Nautilus"
 	}
 
 	gtk_adwaita(){
