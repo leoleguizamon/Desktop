@@ -528,6 +528,10 @@ paquetes=(
 		install_fonts
 		draw_separator
 
+		#Gnome apps
+		install_sway 2 0
+		draw_separator
+		
 		# Establecer tema oscuro
 		gtk_setup 0
 		draw_separator
@@ -538,10 +542,6 @@ paquetes=(
 
 		# Electron Config
 		fix_electron_cursor
-		draw_separator
-
-		#Gnome apps
-		install_sway 2 0
 		draw_separator
 
 		# Actualizar repositorios
