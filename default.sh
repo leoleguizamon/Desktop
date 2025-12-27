@@ -632,6 +632,7 @@ paquetes=(
 			gtk_adwaita 1
 		else
 			sys_invalid
+			return
 		fi
 
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.privacy remember-recent-files false > /dev/null 2>&1 &
@@ -648,6 +649,8 @@ paquetes=(
 		echo "$BOOKMARKS" | sudo -u "$SUDO_USER" tee "$BOOKMARKS_FILE" > /dev/null 2>&1 &
 		draw_spinner $! "Creando bookmarks de Nautilus"
 		draw_separator
+
+		update-desktop-database /home/"$SUDO_USER"/.local/share/applications/
 	}
 
 	gtk_adwaita(){
