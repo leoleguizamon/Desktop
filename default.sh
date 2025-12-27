@@ -47,6 +47,30 @@ file:///home/$SUDO_USER/Desktop Desktop
 file:///home/$SUDO_USER/Templates Templates
 file:///home/$SUDO_USER/Public Public"
 
+	# Configuración de portales
+	PORTAL_CONFIG="[preferred]
+default=gtk
+org.freedesktop.impl.portal.FileChooser=gtk
+org.freedesktop.impl.portal.AppChooser=gtk
+org.freedesktop.impl.portal.Screenshot=wlr
+org.freedesktop.impl.portal.ScreenCast=wlr"
+
+	# Configuración de portal wlr
+	WLR_CONFIG="[screencast]
+output_name=
+max_fps=30
+chooser_type=simple
+chooser_cmd=slurp -f %o -or"
+
+	# Variables de entorno
+	ENV_CONFIG="XDG_CURRENT_DESKTOP=sway"
+
+	# Configuración de Sway
+	SWAY_PORTAL_CONFIG="
+# XDG Desktop Portal
+exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
+exec systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+
 deb_paquetes=(
 	brightnessctl
 	playerctl
@@ -550,8 +574,8 @@ paquetes=(
 		draw_separator
 
 		# Electron Config
-		fix_electron_cursor
-		draw_separator
+		#fix_electron_cursor
+		#draw_separator
 
 		# Actualizar repositorios
 		sys_update
@@ -612,10 +636,15 @@ paquetes=(
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" xdg-user-dirs-update > /dev/null 2>&1 &
 		draw_spinner $! "Actualizando directorios de usuario"
 
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface cursor-theme "Win11OSX"
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface cursor-size 24
+
 		BOOKMARKS_FILE="/home/$SUDO_USER/.config/gtk-3.0/bookmarks"
 
 		echo "$BOOKMARKS" | sudo -u "$SUDO_USER" tee "$BOOKMARKS_FILE" > /dev/null 2>&1 &
 		draw_spinner $! "Creando bookmarks de Nautilus"
+		draw_separator
+		configure_portals
 	}
 
 	gtk_adwaita(){
@@ -690,6 +719,15 @@ paquetes=(
 		draw_spinner $! "Instalando iconos papirus"
 
 		# Aplicar tema con gsettings
+		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' > /dev/null 2>&1 &
+		draw_spinner $! "Estableciendo tema oscuro"
+
+		echo "$DARK_THEME" | sudo -u "$SUDO_USER" tee /home/"$SUDO_USER"/.config/gtk-3.0/settings.ini > /dev/null 2>&1 &
+		draw_spinner $! "Configurando GTK 3.0 oscuro"
+
+		echo "$DARK_THEME" | sudo -u "$SUDO_USER" tee /home/"$SUDO_USER"/.config/gtk-4.0/settings.ini > /dev/null 2>&1 &
+		draw_spinner $! "Configurando GTK 4.0 oscuro"
+
 		sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" gsettings set org.gnome.desktop.interface icon-theme "Dracula" > /dev/null 2>&1 &
 		draw_spinner $! "Aplicando iconos Dracula"
 
@@ -708,48 +746,50 @@ paquetes=(
 	}
 
 ### FUNCIONES Vivecode (Revisar) ###
-	fix_electron_cursor(){
-		printf "║    Configurando cursor para apps Electron        ║\n"
+	configure_portals(){
+		printf "║    Configurando xdg-desktop-portal               ║\n"
 		printf "║                                                  ║\n"
 
-		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/environment.d/
+		# Crear directorios de configuración
+		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/xdg-desktop-portal > /dev/null 2>&1
+		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/xdg-desktop-portal-wlr > /dev/null 2>&1
+		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/environment.d > /dev/null 2>&1
 
-		# Configurar variables de entorno
-		CURSOR_ENV="/home/$SUDO_USER/.config/environment.d/cursor.conf"
-		
-		echo "$ELECTRONF1" | sudo -u "$SUDO_USER" tee "$CURSOR_ENV" > /dev/null
+		# Configurar portales preferidos
+		echo "$PORTAL_CONFIG" | sudo -u "$SUDO_USER" tee /home/"$SUDO_USER"/.config/xdg-desktop-portal/portals.conf > /dev/null 2>&1 &
+		draw_spinner $! "Configurando portales preferidos"
 
-		sleep 0.5 &
+		# Configurar portal wlr
+		echo "$WLR_CONFIG" | sudo -u "$SUDO_USER" tee /home/"$SUDO_USER"/.config/xdg-desktop-portal-wlr/config > /dev/null 2>&1 &
+		draw_spinner $! "Configurando portal wlr"
+
+		# Variables de entorno
+		echo "$ENV_CONFIG" | sudo -u "$SUDO_USER" tee /home/"$SUDO_USER"/.config/environment.d/portals.conf > /dev/null 2>&1 &
 		draw_spinner $! "Configurando variables de entorno"
-
-		# Crear electron-flags.conf
-		ELECTRON_FLAGS="/home/$SUDO_USER/.config/electron-flags.conf"
-		
-		echo "$ELECTRONF2" | sudo -u "$SUDO_USER" tee "$ELECTRON_FLAGS" > /dev/null
-
-		sleep 0.5 &
-		draw_spinner $! "Configurando Electron flags"
-
-		# Crear .Xresources para apps XWayland
-		XRESOURCES="/home/$SUDO_USER/.Xresources"
-		
-		echo "$ELECTRONF3" | sudo -u "$SUDO_USER" tee "$XRESOURCES" > /dev/null
-
-		sleep 0.5 &
-		draw_spinner $! "Configurando Xresources"
 
 		# Agregar a Sway config si existe
 		SWAY_CONFIG="/home/$SUDO_USER/.config/sway/config"
 		if [ -f "$SWAY_CONFIG" ]; then
-			if ! grep -q "xrdb -merge" "$SWAY_CONFIG" 2>/dev/null; then
-				echo "exec_always xrdb -merge ~/.Xresources" >> "$SWAY_CONFIG"
+			if ! grep -q "xdg-desktop-portal" "$SWAY_CONFIG" 2>/dev/null; then
+				echo "$SWAY_PORTAL_CONFIG" >> "$SWAY_CONFIG"
 				sleep 0.5 &
-				draw_spinner $! "Agregando xrdb a Sway config"
+				draw_spinner $! "Agregando portales a Sway config"
+			else
+				sleep 0.5 &
+				draw_spinner $! "Config de Sway ya tiene portales"
 			fi
+		else
+			sleep 0.5 &
+			draw_spinner $! "Config de Sway no encontrado (OK)"
 		fi
 
 		# Ajustar permisos
-		chown "$SUDO_USER":"$SUDO_USER" "$CURSOR_ENV" "$ELECTRON_FLAGS" "$XRESOURCES" > /dev/null 2>&1
+		chown -R "$SUDO_USER":"$SUDO_USER" /home/"$SUDO_USER"/.config/xdg-desktop-portal > /dev/null 2>&1
+		chown -R "$SUDO_USER":"$SUDO_USER" /home/"$SUDO_USER"/.config/xdg-desktop-portal-wlr > /dev/null 2>&1
+
+		draw_space
+		sleep 1 &
+		draw_spinner $! "Reinicia la sesion!"
 	}
 
 ### Main menu
