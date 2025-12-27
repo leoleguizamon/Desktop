@@ -578,7 +578,7 @@ paquetes=(
 		draw_separator
 
 		# Electron Config
-		fix_electron_cursor
+		configure_wayland_apps
 		draw_separator
 
 		# Actualizar repositorios
@@ -648,7 +648,6 @@ paquetes=(
 		echo "$BOOKMARKS" | sudo -u "$SUDO_USER" tee "$BOOKMARKS_FILE" > /dev/null 2>&1 &
 		draw_spinner $! "Creando bookmarks de Nautilus"
 		draw_separator
-		configure_portals
 	}
 
 	gtk_adwaita(){
@@ -750,37 +749,51 @@ paquetes=(
 	}
 
 ### FUNCIONES Vivecode (Revisar) ###
-	configure_portals(){
-		printf "║    Configurando xdg-desktop-portal               ║\n"
+
+	configure_wayland_apps(){
+		printf "║    Configurando apps Wayland y portales          ║\n"
 		printf "║                                                  ║\n"
 
-		# Crear directorios de configuración
+		# Crear directorios necesarios
 		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/xdg-desktop-portal > /dev/null 2>&1
 		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/xdg-desktop-portal-wlr > /dev/null 2>&1
 		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/environment.d > /dev/null 2>&1
 
 		# Configurar portales preferidos
 		echo "$PORTAL_CONFIG" | sudo -u "$SUDO_USER" tee /home/"$SUDO_USER"/.config/xdg-desktop-portal/portals.conf > /dev/null 2>&1 &
-		draw_spinner $! "Configurando portales preferidos"
+		draw_spinner $! "Configurando portales XDG"
 
 		# Configurar portal wlr
 		echo "$WLR_CONFIG" | sudo -u "$SUDO_USER" tee /home/"$SUDO_USER"/.config/xdg-desktop-portal-wlr/config > /dev/null 2>&1 &
 		draw_spinner $! "Configurando portal wlr"
 
-		# Variables de entorno
-		echo "$ENV_CONFIG" | sudo -u "$SUDO_USER" tee /home/"$SUDO_USER"/.config/environment.d/portals.conf > /dev/null 2>&1 &
+		# Variables de entorno (portales + cursor)
+		printf "%s\n\n# Cursor\n%s" "$ENV_CONFIG" "$ELECTRONF1" | sudo -u "$SUDO_USER" tee /home/"$SUDO_USER"/.config/environment.d/wayland.conf > /dev/null 2>&1 &
 		draw_spinner $! "Configurando variables de entorno"
 
-		# Agregar a Sway config si existe
+		# Electron flags
+		echo "$ELECTRONF2" | sudo -u "$SUDO_USER" tee /home/"$SUDO_USER"/.config/electron-flags.conf > /dev/null 2>&1 &
+		draw_spinner $! "Configurando apps Electron"
+
+		# Xresources para XWayland
+		echo "$ELECTRONF3" | sudo -u "$SUDO_USER" tee /home/"$SUDO_USER"/.Xresources > /dev/null 2>&1 &
+		draw_spinner $! "Configurando Xresources"
+
+		# Configurar Sway config si existe
 		SWAY_CONFIG="/home/$SUDO_USER/.config/sway/config"
 		if [ -f "$SWAY_CONFIG" ]; then
-			if ! grep -q "xdg-desktop-portal" "$SWAY_CONFIG" 2>/dev/null; then
+			# Agregar configuración de portales
+			if ! grep -q "dbus-update-activation-environment" "$SWAY_CONFIG" 2>/dev/null; then
 				echo "$SWAY_PORTAL_CONFIG" >> "$SWAY_CONFIG"
 				sleep 0.5 &
-				draw_spinner $! "Agregando portales a Sway config"
-			else
+				draw_spinner $! "Agregando portales a Sway"
+			fi
+
+			# Agregar xrdb
+			if ! grep -q "xrdb -merge" "$SWAY_CONFIG" 2>/dev/null; then
+				echo "exec_always xrdb -merge ~/.Xresources" >> "$SWAY_CONFIG"
 				sleep 0.5 &
-				draw_spinner $! "Config de Sway ya tiene portales"
+				draw_spinner $! "Agregando xrdb a Sway"
 			fi
 		else
 			sleep 0.5 &
@@ -790,55 +803,15 @@ paquetes=(
 		# Ajustar permisos
 		chown -R "$SUDO_USER":"$SUDO_USER" /home/"$SUDO_USER"/.config/xdg-desktop-portal > /dev/null 2>&1
 		chown -R "$SUDO_USER":"$SUDO_USER" /home/"$SUDO_USER"/.config/xdg-desktop-portal-wlr > /dev/null 2>&1
+		chown "$SUDO_USER":"$SUDO_USER" /home/"$SUDO_USER"/.config/environment.d/wayland.conf > /dev/null 2>&1
+		chown "$SUDO_USER":"$SUDO_USER" /home/"$SUDO_USER"/.config/electron-flags.conf > /dev/null 2>&1
+		chown "$SUDO_USER":"$SUDO_USER" /home/"$SUDO_USER"/.Xresources > /dev/null 2>&1
 
 		draw_space
 		sleep 1 &
-		draw_spinner $! "Reinicia la sesion!"
+		draw_spinner $! "Reinicia la sesion para aplicar cambios"
 	}
 
-	fix_electron_cursor(){
-		printf "║    Configurando cursor para apps Electron        ║\n"
-		printf "║                                                  ║\n"
-
-		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/environment.d/
-
-		# Configurar variables de entorno
-		CURSOR_ENV="/home/$SUDO_USER/.config/environment.d/cursor.conf"
-		
-		echo "$ELECTRONF1" | sudo -u "$SUDO_USER" tee "$CURSOR_ENV" > /dev/null
-
-		sleep 0.5 &
-		draw_spinner $! "Configurando variables de entorno"
-
-		# Crear electron-flags.conf
-		ELECTRON_FLAGS="/home/$SUDO_USER/.config/electron-flags.conf"
-		
-		echo "$ELECTRONF2" | sudo -u "$SUDO_USER" tee "$ELECTRON_FLAGS" > /dev/null
-
-		sleep 0.5 &
-		draw_spinner $! "Configurando Electron flags"
-
-		# Crear .Xresources para apps XWayland
-		XRESOURCES="/home/$SUDO_USER/.Xresources"
-		
-		echo "$ELECTRONF3" | sudo -u "$SUDO_USER" tee "$XRESOURCES" > /dev/null
-
-		sleep 0.5 &
-		draw_spinner $! "Configurando Xresources"
-
-		# Agregar a Sway config si existe
-		SWAY_CONFIG="/home/$SUDO_USER/.config/sway/config"
-		if [ -f "$SWAY_CONFIG" ]; then
-			if ! grep -q "xrdb -merge" "$SWAY_CONFIG" 2>/dev/null; then
-				echo "exec_always xrdb -merge ~/.Xresources" >> "$SWAY_CONFIG"
-				sleep 0.5 &
-				draw_spinner $! "Agregando xrdb a Sway config"
-			fi
-		fi
-
-		# Ajustar permisos
-		chown "$SUDO_USER":"$SUDO_USER" "$CURSOR_ENV" "$ELECTRON_FLAGS" "$XRESOURCES" > /dev/null 2>&1
-	}
 ### Main menu
 
 	main(){
@@ -893,7 +866,7 @@ paquetes=(
 				draw_header "Actualizando $DISTRO"
 				sys_update
 				draw_header "Reparar webApps"
-				fix_electron_cursor
+				configure_wayland_apps
 			elif [ "$opcion" == "9" ]; then
 				draw_header "Reiniciando el sistema"
 				sys_reboot
