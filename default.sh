@@ -268,6 +268,10 @@ paquetes=(
 
 		apt install -y gpg > /dev/null 2>&1 &
 		draw_spinner $! "Verificando gpg"
+		
+		apt install -y tee > /dev/null 2>&1 &
+		draw_spinner $! "Verificando tee"
+		
 	}
 
 ### Sistema
@@ -574,8 +578,8 @@ paquetes=(
 		draw_separator
 
 		# Electron Config
-		#fix_electron_cursor
-		#draw_separator
+		fix_electron_cursor
+		draw_separator
 
 		# Actualizar repositorios
 		sys_update
@@ -792,6 +796,49 @@ paquetes=(
 		draw_spinner $! "Reinicia la sesion!"
 	}
 
+	fix_electron_cursor(){
+		printf "║    Configurando cursor para apps Electron        ║\n"
+		printf "║                                                  ║\n"
+
+		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/environment.d/
+
+		# Configurar variables de entorno
+		CURSOR_ENV="/home/$SUDO_USER/.config/environment.d/cursor.conf"
+		
+		echo "$ELECTRONF1" | sudo -u "$SUDO_USER" tee "$CURSOR_ENV" > /dev/null
+
+		sleep 0.5 &
+		draw_spinner $! "Configurando variables de entorno"
+
+		# Crear electron-flags.conf
+		ELECTRON_FLAGS="/home/$SUDO_USER/.config/electron-flags.conf"
+		
+		echo "$ELECTRONF2" | sudo -u "$SUDO_USER" tee "$ELECTRON_FLAGS" > /dev/null
+
+		sleep 0.5 &
+		draw_spinner $! "Configurando Electron flags"
+
+		# Crear .Xresources para apps XWayland
+		XRESOURCES="/home/$SUDO_USER/.Xresources"
+		
+		echo "$ELECTRONF3" | sudo -u "$SUDO_USER" tee "$XRESOURCES" > /dev/null
+
+		sleep 0.5 &
+		draw_spinner $! "Configurando Xresources"
+
+		# Agregar a Sway config si existe
+		SWAY_CONFIG="/home/$SUDO_USER/.config/sway/config"
+		if [ -f "$SWAY_CONFIG" ]; then
+			if ! grep -q "xrdb -merge" "$SWAY_CONFIG" 2>/dev/null; then
+				echo "exec_always xrdb -merge ~/.Xresources" >> "$SWAY_CONFIG"
+				sleep 0.5 &
+				draw_spinner $! "Agregando xrdb a Sway config"
+			fi
+		fi
+
+		# Ajustar permisos
+		chown "$SUDO_USER":"$SUDO_USER" "$CURSOR_ENV" "$ELECTRON_FLAGS" "$XRESOURCES" > /dev/null 2>&1
+	}
 ### Main menu
 
 	main(){
