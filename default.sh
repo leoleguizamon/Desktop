@@ -426,19 +426,22 @@ paquetes=(
 		elif [ "$opcion" -eq 2 ]; then
 			printf "║    Instalando Firefox                            ║\n"
 			# Crear directorio para claves APT
-			install -d -m 0755 /etc/apt/keyrings > /dev/null 2>&1 &
+			install -d -m 0755 /etc/apt/keyrings > /dev/null 2>&1 			
+			sleep 0.1 &
 			draw_spinner $! "Creando directorio de claves"
-			
+
 			# Descargar clave de firma de Mozilla
 			wget -q https://packages.mozilla.org/apt/repo-signing-key.gpg -O- | tee /etc/apt/keyrings/packages.mozilla.org.asc > /dev/null 2>&1 &
 			draw_spinner $! "Descargando clave de Mozilla"
 			
 			# Agregar repositorio de Mozilla (Debian 13 Trixie)
-			echo "$MOZILLA_SOURCES" | tee /etc/apt/sources.list.d/mozilla.sources > /dev/null 2>&1 &
+			echo "$MOZILLA_SOURCES" | tee /etc/apt/sources.list.d/mozilla.sources > /dev/null
+			sleep 0.1 &
 			draw_spinner $! "Agregando repositorio de Mozilla"
 			
 			# Configurar prioridad de paquetes de Mozilla
-			echo "$MOZILLA_PREFERENCES" | tee /etc/apt/preferences.d/mozilla > /dev/null 2>&1 &
+			echo "$MOZILLA_PREFERENCES" | tee /etc/apt/preferences.d/mozilla > /dev/null
+			sleep 0.1 &
 			draw_spinner $! "Configurando prioridad de paquetes"
 			
 			# Actualizar e instalar Firefox
