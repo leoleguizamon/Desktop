@@ -342,6 +342,7 @@ paquetes=(
 		
 		if [ $1 -eq 1 ]; then
 			printf "║    Instalando Entorno Sway                       ║\n"
+			printf "║                                                  ║\n"
 			apt update > /dev/null 2>&1 &
 			draw_spinner $! "Actualizando lista de paquetes"
 			
@@ -352,6 +353,7 @@ paquetes=(
 			done
 		elif [ $1 -eq 2 ]; then
 			printf "║    Instalando Gnome-apps                         ║\n"
+			printf "║                                                  ║\n"
 			apt update > /dev/null 2>&1 &
 			draw_spinner $! "Actualizando lista de paquetes"
 
@@ -421,10 +423,12 @@ paquetes=(
 		
 		if [ "$opcion" -eq 1 ]; then
 			printf "║    Instalando Brave                              ║\n"
+			printf "║                                                  ║\n"
 			curl -fsS https://dl.brave.com/install.sh | sh > /dev/null 2>&1 &
 			draw_spinner $! "Instalando Brave"
 		elif [ "$opcion" -eq 2 ]; then
 			printf "║    Instalando Firefox                            ║\n"
+			printf "║                                                  ║\n"
 			# Crear directorio para claves APT
 			install -d -m 0755 /etc/apt/keyrings > /dev/null 2>&1 			
 			sleep 0.1 &
@@ -551,14 +555,6 @@ paquetes=(
 		# Instalar sway
 		install_sway 1 0
 		draw_separator
-		
-		# Instalar VSCodium
-		install_vscodium 0
-		draw_separator
-		
-		# Instalar Navegadores
-		install_browser 0
-		draw_separator
 
 		# Instalar dotfiles
 		install_dotfiles
@@ -576,8 +572,12 @@ paquetes=(
 		gtk_setup 0
 		draw_separator
 
-		# Eliminar networkmanager
-		sys_setNetwork
+		# Instalar VSCodium
+		install_vscodium 0
+		draw_separator
+		
+		# Instalar Navegadores
+		install_browser 0
 		draw_separator
 
 		# Electron Config
@@ -586,6 +586,10 @@ paquetes=(
 
 		# Actualizar repositorios
 		sys_update
+		draw_separator
+
+		# Eliminar networkmanager
+		sys_setNetwork
 		draw_separator
 
 		printf "║                                                  ║\n"
@@ -622,6 +626,7 @@ paquetes=(
 		elif [ $1 -eq 0 ]; then
 			opcion=1
 		fi
+		printf "║    Configurando GTK                              ║\n"
 		printf "║                                                  ║\n"
 		
 		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/gtk-3.0 > /dev/null 2>&1
@@ -652,8 +657,6 @@ paquetes=(
 		echo "$BOOKMARKS" | sudo -u "$SUDO_USER" tee "$BOOKMARKS_FILE" > /dev/null 2>&1 &
 		draw_spinner $! "Creando bookmarks de Nautilus"
 		draw_separator
-
-		update-desktop-database /home/"$SUDO_USER"/.local/share/applications/
 	}
 
 	gtk_adwaita(){
