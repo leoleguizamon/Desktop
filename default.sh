@@ -127,6 +127,7 @@ utils_apps=(
 	wf-recorder
 	ddcutil
 	pavucontrol
+	power-profiles-daemon
 )
 
 multimedia_apps=(
@@ -367,6 +368,8 @@ paquetes=(
 		# Permisos DDCutil
 		modprobe i2c-dev
 		usermod -aG i2c $SUDO_USER
+
+		usermod -a -G input $SUDO_USER
 
 		apt autoremove -y > /dev/null 2>&1 &
 		draw_spinner $! "Limpiando"
