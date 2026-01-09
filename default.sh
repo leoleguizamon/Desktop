@@ -105,13 +105,14 @@ sway_apps=(
 
 gnome_apps=(
 	"totem"
-	"eog"
+	"loupe"
 	"gnome-disk-utility"
 	"gnome-text-editor"
 	"gnome-calculator"
 	"evince"
 	"nautilus"
 	"baobab"
+	"zenity"
 )
 
 utils_apps=(
