@@ -123,6 +123,9 @@ utils_apps=(
 	git
 	slurp
 	dunst
+	python3-gi
+	gir1.2-gtk-3.0
+	gir1.2-ayatanaappindicator3-0.1
 	libnotify-bin
 	wl-clipboard
 	wf-recorder
